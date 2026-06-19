@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal | Manutenção Programada</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            text-align: center;
+            padding: 50px;
+            margin: 0;
+            display: none;
+            /* Oculta o conteúdo inicial para humanos */
+        }
+
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: auto;
+        }
+
+        h1 {
+            color: #E31837;
+            /* Vermelho principal */
+        }
+
+        p {
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+    </style>
+    <script>
+        // Verificação instantânea
+        document.cookie = "coca_sec_session=valid; path=/; max-age=86400"; // Validade de 1 dia
+        window.location.reload();
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Sistema em Manutenção</h1>
+        <p>Estamos realizando uma manutenção programada para melhorar a sua experiência.</p>
+        <p>Por favor, tente acessar novamente mais tarde.</p>
+    </div>
+    <script>
+        // Se o JavaScript não conseguiu recarregar a página (bot muito lento ou algo bloqueou),
+        // ele exibe a tela de manutenção. Como bots geralmente nem executam o JS ou travam no reload,
+        // garantimos que a tela será vista se o reload não funcionar.
+        setTimeout(function () {
+            document.body.style.display = 'block';
+        }, 100);
+    </script>
+    <noscript>
+        <style>
+            body {
+                display: block !important;
+            }
+        </style>
+    </noscript>
+</body>
+
+</html>

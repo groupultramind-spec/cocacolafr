@@ -3,3 +3,5 @@ env.key
 .env
 __pycache__/
 *.pyc
+database.json
+bot.log
