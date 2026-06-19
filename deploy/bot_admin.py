@@ -6,7 +6,7 @@ import os
 import re
 import requests
 
-SITE_URL = os.environ.get('SITE_URL', 'https://seusite.com.br') # SUBSTITUA AQUI PELO URL DA KINGHOST
+SITE_URL = os.environ.get('SITE_URL', 'https://bebidascentralbrasil.com.br') # URL do site na KingHost
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_FILE = os.path.join(BASE_DIR, 'database.json')
