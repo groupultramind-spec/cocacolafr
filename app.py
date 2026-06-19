@@ -397,14 +397,13 @@ def redirect_whatsapp():
         <h2>Redirecionando para o Atendimento Oficial...</h2>
         <p>Aguarde, você está sendo conectado de forma segura.</p>
         <p style="font-size: 0.9em; color: #666;">Se não abrir automaticamente em 3 segundos, clique no botão abaixo:</p>
-        <a href="https://api.whatsapp.com/send?phone={wa_num}&text={encoded_text}" class="btn" id="wa-btn">Abrir WhatsApp Manualmente</a>
+        <a href="https://wa.me/{wa_num}?text={encoded_text}" class="btn" id="wa-btn">Abrir WhatsApp Manualmente</a>
 
         <script>
             var phone = "{wa_num}";
             var text = "{encoded_text}";
             
-            var apiLink = "https://api.whatsapp.com/send?phone=" + phone + "&text=" + text;
-            var finalLink = apiLink;
+            var finalLink = "https://wa.me/" + phone + "?text=" + text;
 
             document.getElementById("wa-btn").href = finalLink;
             // Try to open native app automatically
