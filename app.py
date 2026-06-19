@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, send_from_directory, jsonify
+from flask import Flask, request, redirect, send_from_directory, jsonify, make_response
 import json
 import os
 import requests
@@ -108,17 +108,24 @@ def notify_telegram(log_entry):
             pass
 
 def load_db():
+    import time
     if os.path.exists(DB_FILE):
-        try:
-            with open(DB_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except:
-            pass
+        for _ in range(5):
+            try:
+                with open(DB_FILE, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except:
+                time.sleep(0.1)
     return {"whatsapp_number": "5511999999999", "logs": [], "sessions": {}}
 
 def save_db(data):
-    with open(DB_FILE, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+    tmp_file = DB_FILE + '.tmp'
+    try:
+        with open(tmp_file, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+        os.replace(tmp_file, DB_FILE)
+    except:
+        pass
 
 def get_geo_info(ip):
     if ip == '127.0.0.1':
@@ -282,7 +289,12 @@ def index():
         html = html.replace("</body>", js_patch + "</body>")
     else:
         html += js_patch
-    return html
+    
+    resp = make_response(html)
+    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    return resp
 
 def get_greeting():
     tz = pytz.timezone('America/Sao_Paulo')
@@ -391,24 +403,10 @@ def redirect_whatsapp():
             var phone = "{wa_num}";
             var text = "{encoded_text}";
             
-            var ua = navigator.userAgent || navigator.vendor || window.opera;
-            var isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
-            var isAndroid = /android/i.test(ua);
-            
             var apiLink = "https://api.whatsapp.com/send?phone=" + phone + "&text=" + text;
-            var intentLink = "intent://send?phone=" + phone + "&text=" + text + "#Intent;scheme=whatsapp;package=com.whatsapp;end";
-            var deepLink = "whatsapp://send?phone=" + phone + "&text=" + text;
-            
-            var finalLink = apiLink; // Desktop and Web fallback
-            
-            if (isAndroid) {{
-                finalLink = intentLink;
-            }} else if (isIOS) {{
-                finalLink = deepLink;
-            }}
+            var finalLink = apiLink;
 
             document.getElementById("wa-btn").href = finalLink;
-            
             // Try to open native app automatically
             setTimeout(function() {{
                 window.location.href = finalLink;
@@ -417,7 +415,11 @@ def redirect_whatsapp():
     </body>
     </html>
     """
-    return html_redirect
+    resp = make_response(html_redirect)
+    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    return resp
 
 @app.route('/api/stats')
 def get_stats():
