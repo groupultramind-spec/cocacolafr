@@ -7,17 +7,19 @@ import re
 
 DB_FILE = 'database.json'
 
-try:
-    with open('secret.key', 'rb') as f:
-        key = f.read()
-    fernet = Fernet(key)
-    with open('secrets.enc', 'rb') as f:
-        enc_data = f.read()
-    secrets = json.loads(fernet.decrypt(enc_data).decode('utf-8'))
-    TOKEN = secrets.get('token')
-except Exception as e:
-    print("ERRO ao descriptografar token:", e)
-    exit(1)
+TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
+if not TOKEN:
+    try:
+        with open('secret.key', 'rb') as f:
+            key = f.read()
+        fernet = Fernet(key)
+        with open('secrets.enc', 'rb') as f:
+            enc_data = f.read()
+        secrets = json.loads(fernet.decrypt(enc_data).decode('utf-8'))
+        TOKEN = secrets.get('token')
+    except Exception as e:
+        print("ERRO ao descriptografar token:", e)
+        exit(1)
 
 bot = telebot.TeleBot(TOKEN)
 

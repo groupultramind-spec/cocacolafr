@@ -16,6 +16,10 @@ DB_FILE = 'database.json'
 db_lock = threading.Lock()
 
 def get_secrets():
+    token = os.environ.get('TELEGRAM_BOT_TOKEN')
+    channel_id = os.environ.get('ADMIN_CHAT_ID')
+    if token and channel_id:
+        return {'token': token, 'channel_id': channel_id}
     try:
         with open('secret.key', 'rb') as f:
             key = f.read()
