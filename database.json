@@ -533,6 +533,127 @@
             "state": "Local",
             "country": "Local",
             "action": "geral"
+        },
+        {
+            "event": "ENTRADA",
+            "timestamp": "19/06/2026 15:39:32",
+            "ip": "127.0.0.1",
+            "device": "Other",
+            "os": "Windows",
+            "browser": "Chrome",
+            "state": "Local",
+            "country": "Local"
+        },
+        {
+            "event": "SAIDA_WHATSAPP",
+            "timestamp": "19/06/2026 15:39:57",
+            "ip": "127.0.0.1",
+            "device": "Other",
+            "os": "Windows",
+            "browser": "Chrome",
+            "state": "Local",
+            "country": "Local",
+            "action": "geral"
+        },
+        {
+            "event": "ENTRADA",
+            "timestamp": "19/06/2026 15:41:11",
+            "ip": "127.0.0.1",
+            "device": "Other",
+            "os": "Windows",
+            "browser": "Chrome",
+            "state": "Local",
+            "country": "Local"
+        },
+        {
+            "event": "ENTRADA",
+            "timestamp": "19/06/2026 15:41:54",
+            "ip": "127.0.0.1",
+            "device": "Other",
+            "os": "Windows",
+            "browser": "Chrome",
+            "state": "Local",
+            "country": "Local"
+        },
+        {
+            "event": "ENTRADA",
+            "timestamp": "19/06/2026 15:43:12",
+            "ip": "127.0.0.1",
+            "device": "Other",
+            "os": "Windows",
+            "browser": "Chrome",
+            "state": "Local",
+            "country": "Local"
+        },
+        {
+            "event": "ENTRADA",
+            "timestamp": "19/06/2026 15:43:16",
+            "ip": "127.0.0.1",
+            "device": "Other",
+            "os": "Windows",
+            "browser": "Chrome",
+            "state": "Local",
+            "country": "Local"
+        },
+        {
+            "event": "ENTRADA",
+            "timestamp": "19/06/2026 15:44:16",
+            "ip": "127.0.0.1",
+            "device": "Other",
+            "os": "Windows",
+            "browser": "Chrome",
+            "state": "Local",
+            "country": "Local"
+        },
+        {
+            "event": "ENTRADA",
+            "timestamp": "19/06/2026 15:45:46",
+            "ip": "127.0.0.1",
+            "device": "Other",
+            "os": "Windows",
+            "browser": "Chrome",
+            "state": "Local",
+            "country": "Local"
+        },
+        {
+            "event": "ENTRADA",
+            "timestamp": "19/06/2026 15:47:07",
+            "ip": "127.0.0.1",
+            "device": "Other",
+            "os": "Windows",
+            "browser": "Chrome",
+            "state": "Local",
+            "country": "Local"
+        },
+        {
+            "event": "ENTRADA",
+            "timestamp": "19/06/2026 15:48:24",
+            "ip": "127.0.0.1",
+            "device": "Other",
+            "os": "Windows",
+            "browser": "Chrome",
+            "state": "Local",
+            "country": "Local"
+        },
+        {
+            "event": "ENTRADA",
+            "timestamp": "19/06/2026 15:49:20",
+            "ip": "127.0.0.1",
+            "device": "Other",
+            "os": "Windows",
+            "browser": "Chrome",
+            "state": "Local",
+            "country": "Local"
+        },
+        {
+            "event": "ENTRADA",
+            "timestamp": "19/06/2026 15:50:10",
+            "ip": "127.0.0.1",
+            "device": "Other",
+            "os": "Windows",
+            "browser": "Chrome",
+            "state": "Local",
+            "country": "Local"
         }
     ],
     "sessions": {
