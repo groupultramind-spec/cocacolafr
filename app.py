@@ -12,7 +12,8 @@ import random
 
 app = Flask(__name__, static_folder='.', static_url_path='')
 
-DB_FILE = 'database.json'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_FILE = os.path.join(BASE_DIR, 'database.json')
 db_lock = threading.Lock()
 
 def get_secrets():
@@ -21,10 +22,10 @@ def get_secrets():
     if token and channel_id:
         return {'token': token, 'channel_id': channel_id}
     try:
-        with open('secret.key', 'rb') as f:
+        with open(os.path.join(BASE_DIR, 'secret.key'), 'rb') as f:
             key = f.read()
         fernet = Fernet(key)
-        with open('secrets.enc', 'rb') as f:
+        with open(os.path.join(BASE_DIR, 'secrets.enc'), 'rb') as f:
             enc_data = f.read()
         return json.loads(fernet.decrypt(enc_data).decode('utf-8'))
     except Exception as e:
@@ -208,19 +209,19 @@ def index():
     
     if not is_crawler:
         if is_blocked(ip, ua):
-            with open('maintenance.html', 'r', encoding='utf-8') as f:
+            with open(os.path.join(BASE_DIR, 'maintenance.html'), 'r', encoding='utf-8') as f:
                 return f.read()
                 
         sec_cookie = request.cookies.get('coca_sec_session')
         if not sec_cookie:
-            with open('maintenance.html', 'r', encoding='utf-8') as f:
+            with open(os.path.join(BASE_DIR, 'maintenance.html'), 'r', encoding='utf-8') as f:
                 return f.read()
                 
         log_event("ENTRADA")
         
     db = load_db()
     wa_num = db.get("whatsapp_number", "0800-887-1111")
-    with open('index.html', 'r', encoding='utf-8') as f:
+    with open(os.path.join(BASE_DIR, 'index.html'), 'r', encoding='utf-8') as f:
         html = f.read()
     html = html.replace("0800-887-1111", wa_num)
     
@@ -336,7 +337,7 @@ def redirect_whatsapp():
     
     if not is_crawler:
         if is_blocked(ip, ua):
-            with open('maintenance.html', 'r', encoding='utf-8') as f:
+            with open(os.path.join(BASE_DIR, 'maintenance.html'), 'r', encoding='utf-8') as f:
                 return f.read()
                 
     action = request.args.get('action', 'geral')

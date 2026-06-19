@@ -5,15 +5,16 @@ import json
 import os
 import re
 
-DB_FILE = 'database.json'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_FILE = os.path.join(BASE_DIR, 'database.json')
 
 TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
 if not TOKEN:
     try:
-        with open('secret.key', 'rb') as f:
+        with open(os.path.join(BASE_DIR, 'secret.key'), 'rb') as f:
             key = f.read()
         fernet = Fernet(key)
-        with open('secrets.enc', 'rb') as f:
+        with open(os.path.join(BASE_DIR, 'secrets.enc'), 'rb') as f:
             enc_data = f.read()
         secrets = json.loads(fernet.decrypt(enc_data).decode('utf-8'))
         TOKEN = secrets.get('token')
