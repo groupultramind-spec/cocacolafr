@@ -234,6 +234,20 @@ def index():
     
     js_patch = """
     <script>
+    document.addEventListener('gesturestart', function (e) {
+        e.preventDefault();
+    });
+    document.addEventListener('touchmove', function(e) {
+        if (e.scale !== 1) { e.preventDefault(); }
+    }, { passive: false });
+    var meta = document.createElement('meta');
+    meta.name = 'viewport';
+    meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+    document.head.appendChild(meta);
+    var style = document.createElement('style');
+    style.innerHTML = 'body { touch-action: manipulation; }';
+    document.head.appendChild(style);
+
     document.addEventListener('click', function(e) { 
         var target = e.target;
         var a = target.closest('a'); 
@@ -258,7 +272,7 @@ def index():
             } else if (text.includes('como funciona') || text.includes('dúvida')) {
                 action = 'ajuda';
             }
-            window.location.href = '/redirect_whatsapp?action=' + encodeURIComponent(action); 
+            window.location.href = '/redirect_whatsapp?action=' + encodeURIComponent(action) + '&t=' + new Date().getTime(); 
         } 
     }, true);
     </script>
