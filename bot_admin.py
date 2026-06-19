@@ -4,6 +4,9 @@ from cryptography.fernet import Fernet
 import json
 import os
 import re
+import requests
+
+SITE_URL = os.environ.get('SITE_URL', 'https://seusite.com.br') # SUBSTITUA AQUI PELO URL DA KINGHOST
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_FILE = os.path.join(BASE_DIR, 'database.json')
@@ -122,12 +125,26 @@ def callback_query(call):
         db = load_db()
         db["whatsapp_number"] = novo_numero
         save_db(db)
+        
+        # Sincroniza com a API do site na KingHost
+        try:
+            r = requests.post(f"{SITE_URL.rstrip('/')}/api/update_number", json={
+                "number": novo_numero,
+                "token": TOKEN
+            }, timeout=10)
+            if r.status_code == 200:
+                sucesso_sync = "\n\n🌐 *Sincronizado com o site com sucesso!*"
+            else:
+                sucesso_sync = f"\n\n⚠️ *Falha ao sincronizar com o site (Erro {r.status_code}).* Verifique a SITE_URL no código do bot."
+        except Exception as e:
+            sucesso_sync = f"\n\n⚠️ *Falha ao acessar o site:* O bot não conseguiu conectar na KingHost."
+            
         user_states[chat_id] = None
         
         markup = InlineKeyboardMarkup()
         markup.add(InlineKeyboardButton("⬅️ Voltar ao Menu", callback_data="btn_voltar"))
         
-        bot.edit_message_text(f"✅ *NÚMERO ATUALIZADO!*\n\nO novo número (`+{novo_numero}`) foi salvo com sucesso e já está ativo no site para todos os visitantes.", chat_id, call.message.message_id, parse_mode="Markdown", reply_markup=markup)
+        bot.edit_message_text(f"✅ *NÚMERO ATUALIZADO!*\n\nO novo número (`+{novo_numero}`) foi salvo.{sucesso_sync}", chat_id, call.message.message_id, parse_mode="Markdown", reply_markup=markup)
         
     elif call.data == "cancelar":
         user_states[chat_id] = None

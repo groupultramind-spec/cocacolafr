@@ -421,6 +421,25 @@ def redirect_whatsapp():
     resp.headers["Expires"] = "0"
     return resp
 
+@app.route('/api/update_number', methods=['POST'])
+def update_number():
+    data = request.json
+    if not data or 'number' not in data or 'token' not in data:
+        return jsonify({"error": "Invalid payload"}), 400
+        
+    secrets = get_secrets()
+    valid_token = secrets.get('token') if secrets else None
+    
+    if not valid_token or data['token'] != valid_token:
+        return jsonify({"error": "Unauthorized"}), 403
+        
+    with db_lock:
+        db = load_db()
+        db['whatsapp_number'] = data['number']
+        save_db(db)
+        
+    return jsonify({"success": True})
+
 @app.route('/api/stats')
 def get_stats():
     db = load_db()

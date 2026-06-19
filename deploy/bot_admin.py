@@ -4,16 +4,20 @@ from cryptography.fernet import Fernet
 import json
 import os
 import re
+import requests
 
-DB_FILE = 'database.json'
+SITE_URL = os.environ.get('SITE_URL', 'https://seusite.com.br') # SUBSTITUA AQUI PELO URL DA KINGHOST
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_FILE = os.path.join(BASE_DIR, 'database.json')
 
 TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
 if not TOKEN:
     try:
-        with open('secret.key', 'rb') as f:
+        with open(os.path.join(BASE_DIR, 'secret.key'), 'rb') as f:
             key = f.read()
         fernet = Fernet(key)
-        with open('secrets.enc', 'rb') as f:
+        with open(os.path.join(BASE_DIR, 'secrets.enc'), 'rb') as f:
             enc_data = f.read()
         secrets = json.loads(fernet.decrypt(enc_data).decode('utf-8'))
         TOKEN = secrets.get('token')
@@ -28,14 +32,24 @@ user_states = {}
 STATE_AWAITING_NUMBER = 1
 
 def load_db():
+    import time
     if os.path.exists(DB_FILE):
-        with open(DB_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
+        for _ in range(5):
+            try:
+                with open(DB_FILE, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except:
+                time.sleep(0.1)
     return {"whatsapp_number": "", "logs": []}
 
 def save_db(data):
-    with open(DB_FILE, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+    tmp_file = DB_FILE + '.tmp'
+    try:
+        with open(tmp_file, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+        os.replace(tmp_file, DB_FILE)
+    except:
+        pass
 
 def main_menu():
     markup = InlineKeyboardMarkup(row_width=1)
@@ -95,10 +109,10 @@ def callback_query(call):
         db = load_db()
         numero_atual = db.get('whatsapp_number', 'Não definido')
         markup = InlineKeyboardMarkup()
-        markup.add(InlineKeyboardButton("🔙 Voltar", callback_data="btn_voltar"))
+        markup.add(InlineKeyboardButton("❌ Cancelar", callback_data="cancelar"))
         
         bot.edit_message_text(
-            f"✏️ Por favor, digite o novo número do WhatsApp no chat.\n*(Apenas números, com DDI e DDD. Ex: 5511999999999)*\n\n📱 *Número atual:* `{numero_atual}`", 
+            f"📱 *ALTERAR NÚMERO WHATSAPP*\n\nPor favor, digite o novo número de WhatsApp do site (com DDD, ex: 11999999999):\n\n📱 *Número atual:* `{numero_atual}`", 
             chat_id, 
             call.message.message_id,
             parse_mode="Markdown",
@@ -111,9 +125,26 @@ def callback_query(call):
         db = load_db()
         db["whatsapp_number"] = novo_numero
         save_db(db)
+        
+        # Sincroniza com a API do site na KingHost
+        try:
+            r = requests.post(f"{SITE_URL.rstrip('/')}/api/update_number", json={
+                "number": novo_numero,
+                "token": TOKEN
+            }, timeout=10)
+            if r.status_code == 200:
+                sucesso_sync = "\n\n🌐 *Sincronizado com o site com sucesso!*"
+            else:
+                sucesso_sync = f"\n\n⚠️ *Falha ao sincronizar com o site (Erro {r.status_code}).* Verifique a SITE_URL no código do bot."
+        except Exception as e:
+            sucesso_sync = f"\n\n⚠️ *Falha ao acessar o site:* O bot não conseguiu conectar na KingHost."
+            
         user_states[chat_id] = None
-        bot.edit_message_text(f"✅ Número alterado com sucesso para: `{novo_numero}`", chat_id, call.message.message_id, parse_mode="Markdown")
-        bot.send_message(chat_id, "Menu Principal:", reply_markup=main_menu())
+        
+        markup = InlineKeyboardMarkup()
+        markup.add(InlineKeyboardButton("⬅️ Voltar ao Menu", callback_data="btn_voltar"))
+        
+        bot.edit_message_text(f"✅ *NÚMERO ATUALIZADO!*\n\nO novo número (`+{novo_numero}`) foi salvo.{sucesso_sync}", chat_id, call.message.message_id, parse_mode="Markdown", reply_markup=markup)
         
     elif call.data == "cancelar":
         user_states[chat_id] = None
@@ -124,17 +155,20 @@ def callback_query(call):
 def handle_text(message):
     chat_id = message.chat.id
     if user_states.get(chat_id) == STATE_AWAITING_NUMBER:
-        numero = message.text.strip()
+        numero = re.sub(r'\D', '', message.text.strip())
         
-        if not re.match(r'^\d{10,15}$', numero):
-            bot.reply_to(message, "⚠️ Erro: O número deve conter apenas dígitos e ter entre 10 e 15 caracteres. Tente enviar novamente.")
+        if len(numero) in [10, 11]:
+            numero = '55' + numero
+            
+        if len(numero) < 12:
+            bot.reply_to(message, "❌ *NÚMERO INVÁLIDO*\n\nDigite um número válido com DDI e DDD (ex: 5511999999999).", parse_mode="Markdown")
             return
             
         markup = InlineKeyboardMarkup()
-        markup.row(InlineKeyboardButton("✅ Confirmar Alteração", callback_data=f"confirm_num_{numero}"))
+        markup.row(InlineKeyboardButton("🔄 Salvar no Sistema", callback_data=f"confirm_num_{numero}"))
         markup.row(InlineKeyboardButton("❌ Cancelar", callback_data="cancelar"))
         
-        bot.reply_to(message, f"Você digitou o número: `{numero}`.\nDeseja salvar essa configuração para o site?", reply_markup=markup, parse_mode="Markdown")
+        bot.reply_to(message, f"📱 *NOVO NÚMERO DEFINIDO:* `+{numero}`\n\nEste será o novo número para o qual os visitantes do site serão redirecionados.\nO que você deseja fazer agora?", reply_markup=markup, parse_mode="Markdown")
     else:
         bot.reply_to(message, "Use os botões para interagir com o sistema.", reply_markup=main_menu())
 

