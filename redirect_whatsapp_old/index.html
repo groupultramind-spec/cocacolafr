@@ -54,11 +54,12 @@
         var text = encodeURIComponent(getTemplate(action));
         
         // Use HTTP universal link. This prevents iOS/Android from blocking custom schemes automatically.
-        var finalLink = "https://api.whatsapp.com/send?phone=" + phone + "&text=" + text;
+        var apiLink = "https://wa.me/" + phone + "?text=" + text; var intentLink = "intent://send?phone=" + phone + "&text=" + text + "#Intent;scheme=whatsapp;package=com.whatsapp;end"; var deepLink = "whatsapp://send?phone=" + phone + "&text=" + text; var isAndroid = navigator.userAgent.toLowerCase().indexOf("android") > -1; var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; var finalLink = apiLink; if (isAndroid) { finalLink = intentLink; } else if (isIOS) { finalLink = deepLink; }
         
         window.location.replace(finalLink);
     </script>
 </body>
 </html>
+
 
 
