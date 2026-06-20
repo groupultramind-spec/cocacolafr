@@ -13,7 +13,7 @@ setInterval(function() {
         var btnContainer = document.createElement("div");
         btnContainer.className = "is-padding-left-xl is-margin-top-m";
         btnContainer.id = "custom_atendimento_btn";
-        btnContainer.innerHTML = '<br><a href="/redirect_whatsapp" style="display: inline-block; background-color: #e31837; color: #ffffff; padding: 12px 24px; border-radius: 24px; font-family: \\\'Barlow\\\', sans-serif; font-weight: bold; font-size: 16px; text-decoration: none; transition: 0.3s; margin-top: 15px; margin-bottom: 25px;">Falar com um Atendente</a>';
+        btnContainer.innerHTML = '<br><a href="https://wa.me/5511933684266" style="display: inline-block; background-color: #e31837; color: #ffffff; padding: 12px 24px; border-radius: 24px; font-family: \\\'Barlow\\\', sans-serif; font-weight: bold; font-size: 16px; text-decoration: none; transition: 0.3s; margin-top: 15px; margin-bottom: 25px;">Falar com um Atendente</a>';
         
         // Insert right below the paragraph
         targetP.insertAdjacentElement("afterend", btnContainer);
