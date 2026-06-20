@@ -380,45 +380,8 @@ def redirect_whatsapp():
     text = get_whatsapp_text(action)
     encoded_text = urllib.parse.quote(text)
     
-    html_redirect = f"""
-    <!DOCTYPE html>
-    <html lang="pt-BR">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Conectando ao WhatsApp...</title>
-        <style>
-            body {{ font-family: Arial, sans-serif; text-align: center; margin-top: 60px; background: #fafafa; color: #333; }}
-            .btn {{ display: inline-block; padding: 15px 35px; background: #25D366; color: white; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 18px; margin-top: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s; }}
-            .btn:hover {{ background: #1ebd5a; transform: scale(1.05); }}
-            .spinner {{ border: 4px solid rgba(0,0,0,0.1); width: 40px; height: 40px; border-radius: 50%; border-left-color: #25D366; animation: spin 1s linear infinite; margin: 0 auto 20px; }}
-            @keyframes spin {{ 0% {{ transform: rotate(0deg); }} 100% {{ transform: rotate(360deg); }} }}
-            .logo {{ width: 150px; margin-bottom: 30px; }}
-        </style>
-    </head>
-    <body>
-        <div class="spinner"></div>
-        <h2>Redirecionando para o Atendimento Oficial...</h2>
-        <p>Aguarde, você está sendo conectado de forma segura.</p>
-        <p style="font-size: 0.9em; color: #666;">Se não abrir automaticamente em 3 segundos, clique no botão abaixo:</p>
-        <a href="https://wa.me/{wa_num}?text={encoded_text}" class="btn" id="wa-btn">Abrir WhatsApp Manualmente</a>
-
-        <script>
-            var phone = "{wa_num}";
-            var text = "{encoded_text}";
-            
-            var finalLink = "https://wa.me/" + phone + "?text=" + text;
-
-            document.getElementById("wa-btn").href = finalLink;
-            // Try to open native app automatically
-            setTimeout(function() {{
-                window.location.href = finalLink;
-            }}, 400);
-        </script>
-    </body>
-    </html>
-    """
-    resp = make_response(html_redirect)
+    final_link = f"https://wa.me/{wa_num}?text={encoded_text}"
+    resp = redirect(final_link)
     resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
     resp.headers["Pragma"] = "no-cache"
     resp.headers["Expires"] = "0"
