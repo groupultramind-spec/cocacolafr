@@ -253,12 +253,16 @@ def index():
             altText = (img.getAttribute('alt') || '').toLowerCase();
         }
         var srcText = '';
+        var img = target.closest('img');
         if (img) {
             srcText = (img.getAttribute('src') || '').toLowerCase();
         }
 
-        var isAppStore = altText.includes('app store') || srcText.includes('app-store') || srcText.includes('apple') || srcText.includes('ios');
-        var isGooglePlay = altText.includes('google play') || srcText.includes('google-play') || srcText.includes('play-store');
+        var isAppStore = target.closest('[alt*="App Store"]') || target.closest('img[src*="app-store"]');
+        var isGooglePlay = target.closest('[alt*="Google Play"]') || target.closest('img[src*="google-play"]');
+        
+        var textNode = a ? a : target;
+        var text = (textNode.textContent || '').trim().toLowerCase();
         
         var isBadgeOrStore = target.closest('[class*="badge"]') || isAppStore || isGooglePlay || 
                              (a && a.getAttribute('href') && (a.getAttribute('href').includes('redirect_whatsapp') || a.getAttribute('href').includes('/login') || a.getAttribute('href').includes('pre-registration'))) || 
@@ -309,11 +313,11 @@ def index():
     }, true);
     </script>
     """
-    
+    js_patch_final = js_patch.replace('0800-887-1111', wa_num)
     if "</body>" in html:
-        html = html.replace("</body>", js_patch + "</body>")
+        html = html.replace("</body>", js_patch_final + "</body>")
     else:
-        html += js_patch
+        html += js_patch_final
     
     resp = make_response(html)
     resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
