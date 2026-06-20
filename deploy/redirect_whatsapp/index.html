@@ -54,10 +54,11 @@
         var text = encodeURIComponent(getTemplate(action));
         
         // Use HTTP universal link. This prevents iOS/Android from blocking custom schemes automatically.
-        var finalLink = "https://api.whatsapp.com/send?phone=" + phone + "?text=" + text;
+        var finalLink = "https://api.whatsapp.com/send?phone=" + phone + "&text=" + text;
         
         window.location.replace(finalLink);
     </script>
 </body>
 </html>
+
 
