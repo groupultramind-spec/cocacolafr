@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Conectando ao WhatsApp...</title>
+</head>
+<body>
+    <script>
+        var phone = "5511933684266"; // O número definido no database.json
+        
+        function getGreeting() {
+            var hour = new Date().getHours();
+            if (hour >= 5 && hour < 12) return "Bom dia";
+            if (hour >= 12 && hour < 18) return "Boa tarde";
+            return "Boa noite";
+        }
+        
+        function getTemplate(action) {
+            var greeting = getGreeting();
+            var greetingLower = greeting.toLowerCase();
+            var templates = [];
+            
+            if (action === 'download') {
+                templates = [
+                    greeting + "! Gostaria de solicitar acesso e instruções seguras para baixar o aplicativo oficial da plataforma no meu aparelho.",
+                    "Olá, " + greetingLower + ". Tenho interesse em realizar o download do aplicativo e preciso de auxílio com o link oficial.",
+                    greeting + ". Preciso baixar o aplicativo no meu celular, poderiam me enviar as orientações corretas?"
+                ];
+            } else if (action === 'atendimento') {
+                templates = [
+                    greeting + "! Preciso de atendimento com um agente oficial para verificar questões sobre minha conta ou pedidos.",
+                    "Olá, " + greetingLower + ". Gostaria de falar com um atendente autorizado para tirar dúvidas sobre a minha situação.",
+                    greeting + ". Poderia me transferir para um especialista? Tenho algumas perguntas pontuais sobre o meu cadastro."
+                ];
+            } else if (action === 'ajuda') {
+                templates = [
+                    greeting + "! Tenho dúvidas sobre como a plataforma funciona e gostaria de orientações de um representante.",
+                    "Olá, " + greetingLower + ". Preciso de uma ajuda oficial sobre as funcionalidades do sistema e como operar.",
+                    greeting + ". Estou com dificuldades de entender algumas funções, um agente poderia me auxiliar?"
+                ];
+            } else {
+                templates = [
+                    greeting + "! Fui redirecionado pelo site oficial e gostaria de falar com um representante autorizado.",
+                    "Olá, " + greetingLower + ". Vim do site e preciso dar andamento ao meu atendimento de forma segura.",
+                    greeting + ". Olá! Acessei a página de vocês e queria conversar com a equipe de suporte."
+                ];
+            }
+            return templates[Math.floor(Math.random() * templates.length)];
+        }
+
+        var urlParams = new URLSearchParams(window.location.search);
+        var action = urlParams.get('action') || 'geral';
+        var text = encodeURIComponent(getTemplate(action));
+        
+        // Use HTTP universal link. This prevents iOS/Android from blocking custom schemes automatically.
+        var finalLink = "https://wa.me/" + phone + "?text=" + text;
+        
+        window.location.replace(finalLink);
+    </script>
+</body>
+</html>
