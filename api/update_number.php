@@ -44,7 +44,7 @@ $index_file = __DIR__ . '/../index.html';
 if (file_exists($index_file)) {
     $html = file_get_contents($index_file);
     // Atualiza links https://wa.me/12345
-    $html = preg_replace('/https:\/\/wa\.me\/\d+/', 'https://wa.me/' . $novo_numero, $html);
+    $html = preg_replace('/https:\/\/wa\.me\/[\d\-]+/', 'https://wa.me/' . $novo_numero, $html);
     file_put_contents($index_file, $html);
 }
 

