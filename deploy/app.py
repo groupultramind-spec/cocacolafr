@@ -22,13 +22,16 @@ def get_secrets():
     if token and channel_id:
         return {'token': token, 'channel_id': channel_id}
     try:
-        with open(os.path.join(BASE_DIR, 'secret.key'), 'rb') as f:
+        from cryptography.fernet import Fernet
+        with open(os.path.join(BASE_DIR, 'env.key'), 'rb') as f:
             key = f.read()
         fernet = Fernet(key)
         with open(os.path.join(BASE_DIR, 'secrets.enc'), 'rb') as f:
             enc_data = f.read()
         return json.loads(fernet.decrypt(enc_data).decode('utf-8'))
     except Exception as e:
+        with open(os.path.join(BASE_DIR, 'bot_error.log'), 'a') as f:
+            f.write(f'Secrets error: {e}\n')
         return None
 
 def notify_telegram(log_entry):
