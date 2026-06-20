@@ -9,7 +9,7 @@ for file_path in files_to_fix:
             html = f.read()
         
         # Replace string literal
-        html = html.replace('/redirect_whatsapp', 'https://wa.me/5511999999999')
+        html = html.replace('/redirect_whatsapp', 'https://wa.me/5511933684266')
         
         # Replace inside __NEXT_DATA__
         match = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', html, re.DOTALL)
@@ -20,7 +20,7 @@ for file_path in files_to_fix:
                     if isinstance(node, dict):
                         for k, v in node.items():
                             if isinstance(v, str) and v == "/redirect_whatsapp":
-                                node[k] = "https://wa.me/5511999999999"
+                                node[k] = "https://wa.me/5511933684266"
                             else:
                                 replace_links(v)
                     elif isinstance(node, list):

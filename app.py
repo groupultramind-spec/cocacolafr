@@ -45,22 +45,26 @@ def notify_telegram(log_entry):
     status_icon = "🟢" if event == 'ENTRADA' else "🔴"
     status_text = "Acessou o site" if event == 'ENTRADA' else f"Redirecionado p/ WhatsApp ({action})"
     
+    import html
+    def esc(val):
+        return html.escape(str(val))
+        
     if event == 'ENTRADA':
-        header = "👤 *NOVO VISITANTE NO SITE*"
+        header = "👤 <b>NOVO VISITANTE NO SITE</b>"
     else:
-        header = "🚀 *LEAD NO WHATSAPP*"
+        header = "🚀 <b>LEAD NO WHATSAPP</b>"
         
     text = f"{header}\n"
     text += f"━━━━━━━━━━━━━━━━━━━━\n"
-    text += f"*{status_icon} Status Atual:* {status_text}\n"
-    text += f"📅 *Data/Hora:* {log_entry['timestamp']}\n\n"
-    text += f"📍 *Local:* {log_entry['state']}, {log_entry['country']}\n"
-    text += f"🌐 *IP:* `{ip}`\n"
-    text += f"📱 *Aparelho:* {log_entry['device']}\n"
-    text += f"💻 *Sistema:* {log_entry['os']}\n"
-    text += f"🧭 *Browser:* {log_entry['browser']}\n"
+    text += f"<b>{status_icon} Status Atual:</b> {esc(status_text)}\n"
+    text += f"📅 <b>Data/Hora:</b> {esc(log_entry['timestamp'])}\n\n"
+    text += f"📍 <b>Local:</b> {esc(log_entry['state'])}, {esc(log_entry['country'])}\n"
+    text += f"🌐 <b>IP:</b> <code>{esc(ip)}</code>\n"
+    text += f"📱 <b>Aparelho:</b> {esc(log_entry['device'])}\n"
+    text += f"💻 <b>Sistema:</b> {esc(log_entry['os'])}\n"
+    text += f"🧭 <b>Browser:</b> {esc(log_entry['browser'])}\n"
     text += f"━━━━━━━━━━━━━━━━━━━━\n"
-    text += f"🛡️ _Informações validadas e protegidas_"
+    text += f"🛡️ <i>Informações validadas e protegidas</i>"
     
     with db_lock:
         db = load_db()
@@ -78,7 +82,7 @@ def notify_telegram(log_entry):
             "chat_id": channel_id,
             "message_id": message_id,
             "text": text,
-            "parse_mode": "Markdown"
+            "parse_mode": "HTML"
         }
         try:
             r = requests.post(url, json=payload, timeout=5).json()
@@ -93,7 +97,7 @@ def notify_telegram(log_entry):
         payload = {
             "chat_id": channel_id,
             "text": text,
-            "parse_mode": "Markdown"
+            "parse_mode": "HTML"
         }
         try:
             r = requests.post(url, json=payload, timeout=5).json()
@@ -116,7 +120,7 @@ def load_db():
                     return json.load(f)
             except:
                 time.sleep(0.1)
-    return {"whatsapp_number": "5511999999999", "logs": [], "sessions": {}}
+    return {"whatsapp_number": "5511933684266", "logs": [], "sessions": {}}
 
 def save_db(data):
     tmp_file = DB_FILE + '.tmp'
