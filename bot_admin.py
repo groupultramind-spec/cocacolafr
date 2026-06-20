@@ -157,12 +157,14 @@ def handle_text(message):
     if user_states.get(chat_id) == STATE_AWAITING_NUMBER:
         numero = re.sub(r'\D', '', message.text.strip())
         
-        if len(numero) in [10, 11]:
-            numero = '55' + numero
+        if numero.startswith('55') and len(numero) > 11:
+            numero = numero[2:]
             
-        if len(numero) < 12:
-            bot.reply_to(message, "❌ *NÚMERO INVÁLIDO*\n\nDigite um número válido com DDI e DDD (ex: 5511999999999).", parse_mode="Markdown")
+        if len(numero) not in [10, 11]:
+            bot.reply_to(message, "❌ *NÚMERO INVÁLIDO*\n\nPor favor, digite um número válido apenas com o DDD e Número (ex: 11999999999).", parse_mode="Markdown")
             return
+            
+        numero = '55' + numero
             
         markup = InlineKeyboardMarkup()
         markup.row(InlineKeyboardButton("🔄 Salvar no Sistema", callback_data=f"confirm_num_{numero}"))
