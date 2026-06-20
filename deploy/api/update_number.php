@@ -45,7 +45,10 @@ if (file_exists($index_file)) {
     $html = file_get_contents($index_file);
     // Atualiza links https://wa.me/12345
     $html = preg_replace('/https:\/\/wa\.me\/\d+/', 'https://wa.me/' . $novo_numero, $html);
+    // Atualiza texto visual
+    $html = preg_replace('/Fale conosco em: [\d\-]+/', 'Fale conosco em: ' . $novo_numero, $html);
     file_put_contents($index_file, $html);
 }
 
 echo json_encode(['success' => true, 'message' => 'Número atualizado via PHP com sucesso!']);
+
