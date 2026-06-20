@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8">
@@ -54,9 +54,10 @@
         var text = encodeURIComponent(getTemplate(action));
         
         // Use HTTP universal link. This prevents iOS/Android from blocking custom schemes automatically.
-        var finalLink = "https://wa.me/" + phone + "?text=" + text;
+        var finalLink = "https://api.whatsapp.com/send?phone=" + phone + "?text=" + text;
         
         window.location.replace(finalLink);
     </script>
 </body>
 </html>
+
