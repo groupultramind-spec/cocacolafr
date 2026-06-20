@@ -276,7 +276,7 @@ def index():
             e.preventDefault(); 
             e.stopPropagation(); 
             var action = 'geral';
-            if (text.includes('atendimento') || (a && a.getAttribute('href') && a.getAttribute('href').includes('/login'))) {
+            if (text.includes('atendimento') || text.includes('cadastre') || (a && a.getAttribute('href') && a.getAttribute('href').includes('/login'))) {
                 action = 'atendimento';
             } else if (text.includes('baixar') || text.includes('app store') || text.includes('google play') || target.closest('[class*="badge"]') || target.closest('[alt*="App Store"]') || target.closest('[alt*="Google Play"]')) {
                 action = 'download';
