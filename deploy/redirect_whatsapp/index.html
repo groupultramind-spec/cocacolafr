@@ -13,12 +13,6 @@
     </style>
 </head>
 <body>
-    <div class="spinner"></div>
-    <h2>Redirecionando para o Atendimento Oficial...</h2>
-    <p>Aguarde, você está sendo conectado de forma segura.</p>
-    <p style="font-size: 0.9em; color: #666;">Se não abrir automaticamente em 3 segundos, clique no botão abaixo:</p>
-    <a href="#" class="btn" id="wa-btn">Abrir WhatsApp Manualmente</a>
-
     <script>
         var phone = "5511999999999"; // O número definido no database.json
         
@@ -82,11 +76,7 @@
             finalLink = deepLink;
         }
 
-        document.getElementById("wa-btn").href = finalLink;
-        
-        setTimeout(function() {
-            window.location.href = finalLink;
-        }, 400);
+        window.location.replace(finalLink);
     </script>
 </body>
 </html>
