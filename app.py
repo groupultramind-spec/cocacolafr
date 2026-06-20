@@ -208,7 +208,12 @@ def log_event(event_type, action=None):
         db['logs'].append(log_entry)
         save_db(db)
     
-    threading.Thread(target=notify_telegram, args=(log_entry,)).start()
+    # Executa de forma síncrona para evitar que o Passenger mate a thread antes de enviar
+    try:
+        notify_telegram(log_entry)
+    except Exception as e:
+        pass
+        
     return log_entry
 
 @app.route('/')
@@ -288,8 +293,6 @@ def index():
                              text.includes('atendimento') || text.includes('atendente') || text.includes('cadastre') || text.includes('cadastrar');
         
         if (isBadgeOrStore) { 
-            e.preventDefault(); 
-            e.stopPropagation(); 
             var action = 'geral';
             if (text.includes('atendimento') || text.includes('atendente') || text.includes('cadastre') || text.includes('cadastrar') || (a && a.getAttribute('href') && a.getAttribute('href').includes('/login'))) {
                 action = 'atendimento';
@@ -298,9 +301,21 @@ def index():
             } else if (text.includes('como funciona') || text.includes('dúvida')) {
                 action = 'ajuda';
             }
-            setTimeout(function() {
-                window.location.href = '/redirect_whatsapp?action=' + encodeURIComponent(action) + '&t=' + new Date().getTime(); 
-            }, 100);
+            
+            // Registra o clique no backend silenciosamente
+            fetch('/redirect_whatsapp?action=' + encodeURIComponent(action) + '&t=' + new Date().getTime(), { mode: 'no-cors' });
+
+            // Se for um link natural (tag A) apontando pro wa.me, deixa o navegador seguir nativamente sem erros
+            if (a && a.getAttribute('href') && (a.getAttribute('href').includes('wa.me') || a.getAttribute('href').includes('whatsapp'))) {
+                return true;
+            } else {
+                // Caso contrário (ex: clicou direto na imagem sem link), força o redirecionamento direto
+                e.preventDefault(); 
+                e.stopPropagation(); 
+                setTimeout(function() {
+                    window.location.href = 'https://wa.me/0800-887-1111';
+                }, 50);
+            }
         } 
     }, true);
     </script>
