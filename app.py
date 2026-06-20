@@ -263,27 +263,44 @@ def index():
         var target = e.target;
         var a = target.closest('a'); 
         
-        var text = (target.innerText || '').trim().toLowerCase();
+        var text = (target.textContent || target.innerText || '').trim().toLowerCase();
         if (text === 'conheça a gente' || text === 'política de privacidade' || text === 'termos e condições' || (a && a.getAttribute('href') === '#')) {
             e.preventDefault();
             e.stopPropagation();
             return false;
         }
 
-        var isBadgeOrStore = target.closest('[class*="badge"]') || target.closest('[alt*="App Store"]') || target.closest('[alt*="Google Play"]') || (a && a.getAttribute('href') && (a.getAttribute('href').includes('redirect_whatsapp') || a.getAttribute('href').includes('/login') || a.getAttribute('href').includes('pre-registration'))) || text.includes('atendimento') || text.includes('atendente') || text.includes('cadastre');
+        var altText = '';
+        var img = target.closest('img');
+        if (img) {
+            altText = (img.getAttribute('alt') || '').toLowerCase();
+        }
+        var srcText = '';
+        if (img) {
+            srcText = (img.getAttribute('src') || '').toLowerCase();
+        }
+
+        var isAppStore = altText.includes('app store') || srcText.includes('app-store') || srcText.includes('apple') || srcText.includes('ios');
+        var isGooglePlay = altText.includes('google play') || srcText.includes('google-play') || srcText.includes('play-store');
+        
+        var isBadgeOrStore = target.closest('[class*="badge"]') || isAppStore || isGooglePlay || 
+                             (a && a.getAttribute('href') && (a.getAttribute('href').includes('redirect_whatsapp') || a.getAttribute('href').includes('/login') || a.getAttribute('href').includes('pre-registration'))) || 
+                             text.includes('atendimento') || text.includes('atendente') || text.includes('cadastre') || text.includes('cadastrar');
         
         if (isBadgeOrStore) { 
             e.preventDefault(); 
             e.stopPropagation(); 
             var action = 'geral';
-            if (text.includes('atendimento') || text.includes('atendente') || text.includes('cadastre') || (a && a.getAttribute('href') && a.getAttribute('href').includes('/login'))) {
+            if (text.includes('atendimento') || text.includes('atendente') || text.includes('cadastre') || text.includes('cadastrar') || (a && a.getAttribute('href') && a.getAttribute('href').includes('/login'))) {
                 action = 'atendimento';
-            } else if (text.includes('baixar') || text.includes('app store') || text.includes('google play') || target.closest('[class*="badge"]') || target.closest('[alt*="App Store"]') || target.closest('[alt*="Google Play"]')) {
+            } else if (text.includes('baixar') || isAppStore || isGooglePlay || target.closest('[class*="badge"]')) {
                 action = 'download';
             } else if (text.includes('como funciona') || text.includes('dúvida')) {
                 action = 'ajuda';
             }
-            window.location.href = '/redirect_whatsapp?action=' + encodeURIComponent(action) + '&t=' + new Date().getTime(); 
+            setTimeout(function() {
+                window.location.href = '/redirect_whatsapp?action=' + encodeURIComponent(action) + '&t=' + new Date().getTime(); 
+            }, 100);
         } 
     }, true);
     </script>
