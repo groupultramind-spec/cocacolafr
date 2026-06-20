@@ -281,39 +281,11 @@ def index():
                 action = 'ajuda';
             }
             
-            // Registra o clique no backend silenciosamente
-            fetch('/redirect_whatsapp?action=' + encodeURIComponent(action) + '&t=' + new Date().getTime(), { mode: 'no-cors' });
-
             e.preventDefault(); 
             e.stopPropagation(); 
 
-            // Pega o href da tag A se existir, senao usa o wa.me genérico
-            var targetUrl = 'https://wa.me/5511933684266';
-            if (a && a.getAttribute('href') && (a.getAttribute('href').includes('wa.me') || a.getAttribute('href').includes('whatsapp'))) {
-                targetUrl = a.getAttribute('href');
-            }
-            
-            // Adiciona a mensagem de apresentacao
-            var hr = new Date().getHours();
-            var saudacao = "Olá";
-            if (hr >= 5 && hr < 12) saudacao = "Bom dia";
-            else if (hr >= 12 && hr < 18) saudacao = "Boa tarde";
-            else saudacao = "Boa noite";
-            
-            var msg = saudacao + "! Gostaria de saber mais informações.";
-            if (action === 'atendimento') msg = saudacao + "! Preciso de atendimento sobre a plataforma.";
-            else if (action === 'download') msg = saudacao + "! Gostaria de solicitar acesso ao aplicativo.";
-            else if (action === 'ajuda') msg = saudacao + "! Tenho uma dúvida de como funciona a plataforma.";
-
-            if (targetUrl.indexOf('?') !== -1) {
-                targetUrl = targetUrl.split('?')[0];
-            }
-            targetUrl = targetUrl + "?text=" + encodeURIComponent(msg);
-            
-            // Dá tempo para o fetch() de tracking ser enviado antes de descarregar a página
-            setTimeout(function() {
-                window.location.href = targetUrl;
-            }, 300);
+            // Redireciona o usuario para o endpoint /redirect_whatsapp que fara o log no Telegram e gerara as mensagens dinamicas
+            window.location.href = '/redirect_whatsapp?action=' + encodeURIComponent(action);
         } 
     }, true);
     </script>
