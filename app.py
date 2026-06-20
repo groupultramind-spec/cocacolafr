@@ -307,8 +307,10 @@ def index():
             }
             targetUrl = targetUrl + "?text=" + encodeURIComponent(msg);
             
-            // Redireciona imediatamente sem setTimeout para o Safari não bloquear
-            window.location.href = targetUrl;
+            // Dá tempo para o fetch() de tracking ser enviado antes de descarregar a página
+            setTimeout(function() {
+                window.location.href = targetUrl;
+            }, 300);
         } 
     }, true);
     </script>
