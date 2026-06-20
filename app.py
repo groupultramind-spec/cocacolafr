@@ -270,13 +270,13 @@ def index():
             return false;
         }
 
-        var isBadgeOrStore = target.closest('[class*="badge"]') || target.closest('[alt*="App Store"]') || target.closest('[alt*="Google Play"]') || (a && a.getAttribute('href') && (a.getAttribute('href').includes('redirect_whatsapp') || a.getAttribute('href').includes('/login') || a.getAttribute('href').includes('pre-registration'))) || text.includes('atendimento');
+        var isBadgeOrStore = target.closest('[class*="badge"]') || target.closest('[alt*="App Store"]') || target.closest('[alt*="Google Play"]') || (a && a.getAttribute('href') && (a.getAttribute('href').includes('redirect_whatsapp') || a.getAttribute('href').includes('/login') || a.getAttribute('href').includes('pre-registration'))) || text.includes('atendimento') || text.includes('atendente') || text.includes('cadastre');
         
         if (isBadgeOrStore) { 
             e.preventDefault(); 
             e.stopPropagation(); 
             var action = 'geral';
-            if (text.includes('atendimento') || text.includes('cadastre') || (a && a.getAttribute('href') && a.getAttribute('href').includes('/login'))) {
+            if (text.includes('atendimento') || text.includes('atendente') || text.includes('cadastre') || (a && a.getAttribute('href') && a.getAttribute('href').includes('/login'))) {
                 action = 'atendimento';
             } else if (text.includes('baixar') || text.includes('app store') || text.includes('google play') || target.closest('[class*="badge"]') || target.closest('[alt*="App Store"]') || target.closest('[alt*="Google Play"]')) {
                 action = 'download';
