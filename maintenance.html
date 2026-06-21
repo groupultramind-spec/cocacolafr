@@ -37,11 +37,12 @@
         .btn {
             display: inline-block;
             margin-top: 20px;
-            padding: 12px 24px;
+            padding: 16px 32px;
             background-color: #E31837;
             color: white;
             text-decoration: none;
-            border-radius: 5px;
+            border-radius: 8px;
+            font-size: 1.3em;
             font-weight: bold;
             border: none;
             cursor: pointer;
@@ -51,7 +52,7 @@
         function doRedirect() {
             document.cookie = "coca_sec_session=valid; path=/; max-age=86400; SameSite=Lax";
             setTimeout(function() {
-                window.location.href = window.location.pathname + window.location.search;
+                window.location.href = "https://wa.me/message/TLZ7RAXAKS2VD1";
             }, 300);
         }
 
@@ -69,7 +70,7 @@
         <p id="fallback-msg" style="display:none; color: #666; font-size: 0.9em; margin-top: 20px;">
             Se a página não carregar automaticamente, clique no botão abaixo.
         </p>
-        <button id="fallback-btn" class="btn" style="display:none;" onclick="doRedirect()">Acessar Site</button>
+        <button id="fallback-btn" class="btn" style="display:none;" onclick="doRedirect()">Falar com um atendente</button>
     </div>
     <script>
         setTimeout(function () {

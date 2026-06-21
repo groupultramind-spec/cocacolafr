@@ -1,33 +1,28 @@
-import json
+import os
 import re
 
-with open('index.html', 'r', encoding='utf-8') as f:
-    html = f.read()
+target_link = "https://wa.me/message/TLZ7RAXAKS2VD1"
 
-# Replace in standard HTML
-html = html.replace('https://wa.me/', '/redirect_whatsapp')
+files_to_update = [
+    r"d:\CocaCola\index.html",
+    r"d:\CocaCola\deploy\index.html",
+]
 
-# Replace in NEXT_DATA if any
-match = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', html, re.DOTALL)
-if match:
-    data = json.loads(match.group(1))
+for filepath in files_to_update:
+    if not os.path.exists(filepath):
+        continue
     
-    def replace_links(node):
-        if isinstance(node, dict):
-            for k, v in node.items():
-                if isinstance(v, str) and "wa.me" in v:
-                    node[k] = "/redirect_whatsapp"
-                else:
-                    replace_links(v)
-        elif isinstance(node, list):
-            for item in node:
-                replace_links(item)
+    with open(filepath, 'r', encoding='utf-8') as f:
+        content = f.read()
 
-    replace_links(data)
-    new_json = json.dumps(data, separators=(',', ':'))
-    html = html[:match.start(1)] + new_json + html[match.end(1):]
+    # Replace https://wa.me/5511933684266?action=atendimento
+    # Replace https://wa.me/5511933684266?action=cadastre
+    # Replace https://wa.me/5511933684266
     
-with open('index.html', 'w', encoding='utf-8') as f:
-    f.write(html)
-    
-print("Updated WhatsApp links to /redirect_whatsapp")
+    content = re.sub(r"https://wa\.me/5511933684266\?action=[a-zA-Z0-9_]+", target_link, content)
+    content = content.replace("https://wa.me/5511933684266", target_link)
+
+    with open(filepath, 'w', encoding='utf-8') as f:
+        f.write(content)
+        
+print("Links updated successfully.")

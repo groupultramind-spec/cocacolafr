@@ -20,7 +20,8 @@ if os.path.exists(env_file):
             line = line.strip()
             if line and not line.startswith('#') and '=' in line:
                 k, v = line.split('=', 1)
-                os.environ.setdefault(k.strip(), v.strip())
+                os.environ[k.strip()] = v.strip()
+
 
 DB_FILE = os.path.join(BASE_DIR, 'database.json')
 db_lock = threading.Lock()
