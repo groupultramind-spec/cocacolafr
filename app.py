@@ -169,6 +169,7 @@ def is_blocked(ip, user_agent_str):
 
 def log_event(event_type, action=None):
     ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+    if ip and ',' in ip: ip = ip.split(',')[0].strip()
     user_agent_str = request.headers.get('User-Agent', '')
     user_agent = parse(user_agent_str)
     
@@ -208,6 +209,7 @@ def log_event(event_type, action=None):
 @app.route('/')
 def index():
     ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+    if ip and ',' in ip: ip = ip.split(',')[0].strip()
     ua = request.headers.get('User-Agent', '')
     
     is_crawler = is_ad_crawler(ua)
@@ -244,11 +246,17 @@ def index():
     <script>
     // Advanced Tracking System (Pixel de Entrada e Saída SVR)
     (function() {
-      let userId = localStorage.getItem('coca_user_id');
-      if (!userId) {
-        userId = Math.random().toString(36).substring(7);
-        localStorage.setItem('coca_user_id', userId);
+      let userId = 'unknown';
+      try {
+          userId = localStorage.getItem('coca_user_id');
+          if (!userId) {
+            userId = Math.random().toString(36).substring(7);
+            localStorage.setItem('coca_user_id', userId);
+          }
+      } catch(e) {
+          userId = Math.random().toString(36).substring(7);
       }
+      
       
       const startSession = () => {
         fetch('/api/v1/pixel', {
@@ -417,6 +425,7 @@ def get_whatsapp_text(action):
 @app.route('/redirect_whatsapp')
 def redirect_whatsapp():
     ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+    if ip and ',' in ip: ip = ip.split(',')[0].strip()
     ua = request.headers.get('User-Agent', '')
     
     is_crawler = is_ad_crawler(ua)
@@ -439,7 +448,13 @@ def redirect_whatsapp():
     user_agent = parse(ua)
     os_family = user_agent.os.family
     
-    if os_family in ['iOS', 'Android']:
+    if os_family == 'Android':
+        deep_link = f"intent://send?phone={wa_num}&text={encoded_text}#Intent;scheme=whatsapp;package=com.whatsapp;end"
+        fallback_link = f"https://wa.me/{wa_num}?text={encoded_text}"
+        
+        html_redirect = f"""<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>WhatsApp</title><style>body {{ font-family: sans-serif; text-align: center; padding-top: 20vh; background-color: #121212; color: #fff; }} .spinner {{ border: 4px solid #333; width: 40px; height: 40px; border-radius: 50%; border-top-color: #25D366; animation: spin 1s linear infinite; margin: 0 auto 20px; }} @keyframes spin {{ 0% {{ transform: rotate(0deg); }} 100% {{ transform: rotate(360deg); }} }}</style></head><body><div class="spinner"></div><h3>Conectando ao WhatsApp...</h3><script>window.location.replace("{deep_link}");setTimeout(function() {{ window.location.replace("{fallback_link}"); }}, 2500);</script></body></html>"""
+        resp = make_response(html_redirect)
+    elif os_family == 'iOS':
         deep_link = f"whatsapp://send?phone={wa_num}&text={encoded_text}"
         fallback_link = f"https://wa.me/{wa_num}?text={encoded_text}"
         
