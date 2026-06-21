@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal | Manutenção Programada</title>
+    <title>Portal | Verificação de Segurança</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -14,7 +14,6 @@
             padding: 50px;
             margin: 0;
             display: none;
-            /* Oculta o conteúdo inicial para humanos */
         }
 
         .container {
@@ -28,40 +27,63 @@
 
         h1 {
             color: #E31837;
-            /* Vermelho principal */
         }
 
         p {
             font-size: 1.1em;
             line-height: 1.6;
         }
+        
+        .btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 24px;
+            background-color: #E31837;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+        }
     </style>
     <script>
-        // Verificação instantânea
-        document.cookie = "coca_sec_session=valid; path=/; max-age=86400"; // Validade de 1 dia
-        window.location.reload();
+        function doRedirect() {
+            document.cookie = "coca_sec_session=valid; path=/; max-age=86400; SameSite=Lax";
+            setTimeout(function() {
+                window.location.href = window.location.pathname + window.location.search;
+            }, 300);
+        }
+
+        if (!sessionStorage.getItem('sec_checked')) {
+            sessionStorage.setItem('sec_checked', '1');
+            doRedirect();
+        }
     </script>
 </head>
 
 <body>
     <div class="container">
-        <h1>Sistema em Manutenção</h1>
-        <p>Estamos realizando uma manutenção programada para melhorar a sua experiência.</p>
-        <p>Por favor, tente acessar novamente mais tarde.</p>
+        <h1>Verificando conexão...</h1>
+        <p>Aguarde um momento enquanto carregamos o sistema de forma segura.</p>
+        <p id="fallback-msg" style="display:none; color: #666; font-size: 0.9em; margin-top: 20px;">
+            Se a página não carregar automaticamente, clique no botão abaixo.
+        </p>
+        <button id="fallback-btn" class="btn" style="display:none;" onclick="doRedirect()">Acessar Site</button>
     </div>
     <script>
-        // Se o JavaScript não conseguiu recarregar a página (bot muito lento ou algo bloqueou),
-        // ele exibe a tela de manutenção. Como bots geralmente nem executam o JS ou travam no reload,
-        // garantimos que a tela será vista se o reload não funcionar.
         setTimeout(function () {
             document.body.style.display = 'block';
         }, 100);
+        
+        setTimeout(function () {
+            document.getElementById('fallback-msg').style.display = 'block';
+            document.getElementById('fallback-btn').style.display = 'inline-block';
+        }, 2000);
     </script>
     <noscript>
         <style>
-            body {
-                display: block !important;
-            }
+            body { display: block !important; }
         </style>
     </noscript>
 </body>

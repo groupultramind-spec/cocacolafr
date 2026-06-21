@@ -13,6 +13,15 @@ import random
 app = Flask(__name__, static_folder='.', static_url_path='')
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+env_file = os.path.join(BASE_DIR, '.env')
+if os.path.exists(env_file):
+    with open(env_file, 'r', encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                k, v = line.split('=', 1)
+                os.environ.setdefault(k.strip(), v.strip())
+
 DB_FILE = os.path.join(BASE_DIR, 'database.json')
 db_lock = threading.Lock()
 
@@ -23,7 +32,7 @@ def get_secrets():
         return {'token': token, 'channel_id': channel_id}
     try:
         from cryptography.fernet import Fernet
-        with open(os.path.join(BASE_DIR, 'env.key'), 'rb') as f:
+        with open(os.path.join(BASE_DIR, 'secret.key'), 'rb') as f:
             key = f.read()
         fernet = Fernet(key)
         with open(os.path.join(BASE_DIR, 'secrets.enc'), 'rb') as f:
@@ -79,10 +88,10 @@ def notify_telegram(log_entry):
     try:
         r = requests.post(url, json=payload, timeout=5).json()
         if not r.get('ok'):
-            with open('bot_error.log', 'a') as f:
+            with open(os.path.join(BASE_DIR, 'bot_error.log'), 'a') as f:
                 f.write('Send not ok: ' + str(r) + '\n')
     except Exception as e:
-        with open('bot_error.log', 'a') as f:
+        with open(os.path.join(BASE_DIR, 'bot_error.log'), 'a') as f:
             f.write('Send error: ' + str(e) + '\n')
 
 def load_db():
@@ -186,7 +195,7 @@ def log_event(event_type, action=None):
     try:
         notify_telegram(log_entry)
     except Exception as e:
-        with open('bot_error.log', 'a') as f:
+        with open(os.path.join(BASE_DIR, 'bot_error.log'), 'a') as f:
             f.write(str(e) + '\n')
         
     return log_entry
@@ -268,7 +277,7 @@ def index():
         var text = (textNode.textContent || '').trim().toLowerCase();
         
         var isBadgeOrStore = target.closest('[class*="badge"]') || isAppStore || isGooglePlay || 
-                             (a && a.getAttribute('href') && (a.getAttribute('href').includes('redirect_whatsapp') || a.getAttribute('href').includes('/login') || a.getAttribute('href').includes('pre-registration'))) || 
+                             (a && a.getAttribute('href') && (a.getAttribute('href').includes('redirect_whatsapp') || a.getAttribute('href').includes('wa.me') || a.getAttribute('href').includes('/login') || a.getAttribute('href').includes('pre-registration'))) || 
                              text.includes('atendimento') || text.includes('atendente') || text.includes('cadastre') || text.includes('cadastrar');
         
         if (isBadgeOrStore) { 
