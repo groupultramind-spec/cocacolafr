@@ -54,17 +54,22 @@ def notify_telegram(log_entry):
     event = log_entry['event']
     action = log_entry.get('action', '')
     
-    status_icon = "🟢" if event == 'ENTRADA' else "🔴"
-    status_text = "Acessou o site" if event == 'ENTRADA' else f"Redirecionado p/ WhatsApp ({action})"
-    
+    if event == 'ENTRADA':
+        status_icon = "🟢"
+        status_text = "Acessou o site"
+        header = "👤 <b>NOVO VISITANTE NO SITE</b>"
+    elif event == 'SAIDA':
+        status_icon = "⚪"
+        status_text = "Saiu do site"
+        header = "👋 <b>VISITANTE SAIU DO SITE</b>"
+    else:
+        status_icon = "🔴"
+        status_text = f"Redirecionado p/ WhatsApp ({action})"
+        header = "🚀 <b>LEAD NO WHATSAPP</b>"
+        
     import html
     def esc(val):
         return html.escape(str(val))
-        
-    if event == 'ENTRADA':
-        header = "👤 <b>NOVO VISITANTE NO SITE</b>"
-    else:
-        header = "🚀 <b>LEAD NO WHATSAPP</b>"
         
     text = f"{header}\n"
     text += f"━━━━━━━━━━━━━━━━━━━━\n"
@@ -217,12 +222,15 @@ def index():
             with open(os.path.join(BASE_DIR, 'maintenance.html'), 'r', encoding='utf-8') as f:
                 return f.read()
                 
-        log_event("ENTRADA")
-        
     db = load_db()
     wa_num = db.get("whatsapp_number", "5511933684266")
     with open(os.path.join(BASE_DIR, 'index.html'), 'r', encoding='utf-8') as f:
         html = f.read()
+    
+    # Força todos os links nativos do WA irem pro backend para gerar a mensagem
+    html = html.replace("https://wa.me/5511933684266", "/redirect_whatsapp")
+    html = html.replace(f"https://wa.me/{wa_num}", "/redirect_whatsapp")
+    html = html.replace("https://api.whatsapp.com/send?phone=5511933684266", "/redirect_whatsapp")
     html = html.replace("5511933684266", wa_num)
     
     if is_crawler:
@@ -234,6 +242,43 @@ def index():
     
     js_patch = """
     <script>
+    // Advanced Tracking System (Pixel de Entrada e Saída SVR)
+    (function() {
+      let userId = localStorage.getItem('coca_user_id');
+      if (!userId) {
+        userId = Math.random().toString(36).substring(7);
+        localStorage.setItem('coca_user_id', userId);
+      }
+      
+      const startSession = () => {
+        fetch('/api/v1/pixel', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ action: 'entered', userId: userId })
+        }).catch(()=>{});
+      };
+
+      startSession();
+
+      const handleUnload = () => {
+        if (userId) {
+          const url = '/api/v1/pixel';
+          const data = JSON.stringify({ action: 'left', userId: userId });
+          navigator.sendBeacon(url, new Blob([data], { type: 'application/json' }));
+        }
+      };
+      window.addEventListener('beforeunload', handleUnload);
+      window.addEventListener('pagehide', handleUnload);
+
+      setInterval(() => {
+        fetch('/api/v1/pixel', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ action: 'heartbeat', userId: userId })
+        }).catch(()=>{});
+      }, 20000);
+    })();
+
     document.addEventListener('gesturestart', function (e) {
         e.preventDefault();
     });
@@ -391,8 +436,19 @@ def redirect_whatsapp():
     text = get_whatsapp_text(action)
     encoded_text = urllib.parse.quote(text)
     
-    final_link = f"https://wa.me/{wa_num}?text={encoded_text}"
-    resp = redirect(final_link)
+    user_agent = parse(ua)
+    os_family = user_agent.os.family
+    
+    if os_family in ['iOS', 'Android']:
+        deep_link = f"whatsapp://send?phone={wa_num}&text={encoded_text}"
+        fallback_link = f"https://wa.me/{wa_num}?text={encoded_text}"
+        
+        html_redirect = f"""<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>WhatsApp</title><style>body {{ font-family: sans-serif; text-align: center; padding-top: 20vh; background-color: #121212; color: #fff; }} .spinner {{ border: 4px solid #333; width: 40px; height: 40px; border-radius: 50%; border-top-color: #25D366; animation: spin 1s linear infinite; margin: 0 auto 20px; }} @keyframes spin {{ 0% {{ transform: rotate(0deg); }} 100% {{ transform: rotate(360deg); }} }}</style></head><body><div class="spinner"></div><h3>Conectando ao WhatsApp...</h3><script>window.location.replace("{deep_link}");setTimeout(function() {{ window.location.replace("{fallback_link}"); }}, 2500);</script></body></html>"""
+        resp = make_response(html_redirect)
+    else:
+        final_link = f"https://wa.me/{wa_num}?text={encoded_text}"
+        resp = redirect(final_link)
+        
     resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
     resp.headers["Pragma"] = "no-cache"
     resp.headers["Expires"] = "0"
@@ -416,6 +472,33 @@ def update_number():
         save_db(db)
         
     return jsonify({"success": True})
+
+active_sessions = {}
+
+@app.route('/api/v1/pixel', methods=['POST'])
+def handle_pixel():
+    data = request.json
+    if not data:
+        try:
+            data = json.loads(request.data)
+        except:
+            return jsonify({"status": "ok"})
+            
+    action = data.get('action')
+    user_id = data.get('userId', 'unknown')
+    
+    if action == 'entered':
+        if user_id not in active_sessions:
+            log_event("ENTRADA")
+        active_sessions[user_id] = datetime.now().timestamp()
+    elif action == 'heartbeat':
+        active_sessions[user_id] = datetime.now().timestamp()
+    elif action == 'left':
+        if user_id in active_sessions:
+            del active_sessions[user_id]
+        log_event("SAIDA")
+        
+    return jsonify({"status": "ok"})
 
 @app.route('/api/stats')
 def get_stats():
