@@ -232,7 +232,7 @@ def index():
     
     # Força todos os links nativos do WA irem pro backend para gerar a mensagem
     html = html.replace("https://wa.me/5511933684266", "/redirect_whatsapp")
-    html = html.replace("https://wa.me/message/TLZ7RAXAKS2VD1", "/redirect_whatsapp")
+    html = html.replace("https://wa.me/5511971730325", "/redirect_whatsapp")
     html = html.replace(f"https://wa.me/{wa_num}", "/redirect_whatsapp")
     html = html.replace("https://api.whatsapp.com/send?phone=5511933684266", "/redirect_whatsapp")
     html = html.replace("5511933684266", wa_num)

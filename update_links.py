@@ -1,7 +1,7 @@
 import os
 import re
 
-target_link = "https://wa.me/message/TLZ7RAXAKS2VD1"
+target_link = "https://wa.me/5511971730325"
 
 files_to_update = [
     r"d:\CocaCola\index.html",
