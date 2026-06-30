@@ -232,6 +232,7 @@ def index():
     
     # Força todos os links nativos do WA irem pro backend para gerar a mensagem
     html = html.replace("https://wa.me/5511933684266", "/redirect_whatsapp")
+    html = html.replace("https://wa.me/message/TLZ7RAXAKS2VD1", "/redirect_whatsapp")
     html = html.replace(f"https://wa.me/{wa_num}", "/redirect_whatsapp")
     html = html.replace("https://api.whatsapp.com/send?phone=5511933684266", "/redirect_whatsapp")
     html = html.replace("5511933684266", wa_num)
@@ -271,9 +272,12 @@ def index():
 
       const handleUnload = () => {
         if (userId) {
-          const url = '/api/v1/pixel';
-          const data = JSON.stringify({ action: 'left', userId: userId });
-          navigator.sendBeacon(url, new Blob([data], { type: 'application/json' }));
+          fetch('/api/v1/pixel', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ action: 'left', userId: userId }),
+            keepalive: true
+          }).catch(()=>{});
         }
       };
       window.addEventListener('beforeunload', handleUnload);
@@ -502,13 +506,26 @@ def handle_pixel():
             
     action = data.get('action')
     user_id = data.get('userId', 'unknown')
+    now = datetime.now().timestamp()
+    
+    # Cleanup stale sessions (timeout > 60 seconds without heartbeat)
+    stale_users = []
+    for uid, last_time in list(active_sessions.items()):
+        if now - last_time > 60:
+            stale_users.append(uid)
+            
+    for uid in stale_users:
+        if uid in active_sessions:
+            del active_sessions[uid]
+            # Considerado SAIDA se timeout ocorreu
+            log_event("SAIDA")
     
     if action == 'entered':
         if user_id not in active_sessions:
             log_event("ENTRADA")
-        active_sessions[user_id] = datetime.now().timestamp()
+        active_sessions[user_id] = now
     elif action == 'heartbeat':
-        active_sessions[user_id] = datetime.now().timestamp()
+        active_sessions[user_id] = now
     elif action == 'left':
         if user_id in active_sessions:
             del active_sessions[user_id]
