@@ -130,9 +130,9 @@ def callback_query(call):
         db["whatsapp_number"] = novo_numero
         save_db(db)
         
-        # Sincroniza com a API do site na KingHost (AGORA EM PHP)
+        # Sincroniza com a API do site na KingHost
         try:
-            r = requests.post(f"{SITE_URL.rstrip('/')}/api/update_number.php", json={
+            r = requests.post(f"{SITE_URL.rstrip('/')}/api/update_number", json={
                 "number": novo_numero,
                 "token": TOKEN
             }, timeout=10)
