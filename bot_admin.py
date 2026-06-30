@@ -139,7 +139,7 @@ def callback_query(call):
             if r.status_code == 200:
                 sucesso_sync = "\n\n🌐 *Sincronizado com o site com sucesso!*"
             else:
-                sucesso_sync = f"\n\n⚠️ *Falha ao sincronizar com o site (Erro {r.status_code}).* Verifique a SITE_URL no código do bot."
+                sucesso_sync = f"\n\n⚠️ *Falha ao sincronizar com o site (Erro {r.status_code}).* Verifique a configuração de URL no código do bot."
         except Exception as e:
             sucesso_sync = f"\n\n⚠️ *Falha ao acessar o site:* O bot não conseguiu conectar na KingHost."
             
