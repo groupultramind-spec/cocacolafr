@@ -65,6 +65,10 @@ def send_welcome(message):
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
     chat_id = call.message.chat.id
+    try:
+        bot.answer_callback_query(call.id)
+    except:
+        pass
     
     if call.data == "btn_relatorio":
         db = load_db()
