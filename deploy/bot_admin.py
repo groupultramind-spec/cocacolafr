@@ -132,7 +132,7 @@ def callback_query(call):
         
         # Sincroniza com a API do site na KingHost (AGORA EM PHP)
         try:
-            r = requests.post(f"{SITE_URL.rstrip('/')}/api/update_number", json={
+            r = requests.post(f"{SITE_URL.rstrip('/')}/api/update_number.php", json={
                 "number": novo_numero,
                 "token": TOKEN
             }, timeout=10)
