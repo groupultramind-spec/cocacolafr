@@ -573,31 +573,6 @@ def handle_pixel():
         
     return jsonify({"status": "ok"})
 
-@app.route('/api/update_number', methods=['POST'])
-def update_number():
-    data = request.get_json()
-    if not data or 'number' not in data or 'token' not in data:
-        return jsonify({"error": "Invalid payload"}), 400
-        
-    secrets = get_secrets()
-    if not secrets or data['token'] != secrets.get('token'):
-        return jsonify({"error": "Invalid token"}), 403
-        
-    new_number = data['number']
-    
-    db = load_db()
-    db['whatsapp_number'] = new_number
-    save_db(db)
-    
-    import subprocess
-    try:
-        subprocess.run(["python", os.path.join(BASE_DIR, "generate_index.py")], check=True)
-    except Exception as e:
-        print("Error regenerating index.html:", e)
-        return jsonify({"error": "Error regenerating HTML"}), 500
-        
-    return jsonify({"status": "success"})
-
 @app.route('/api/stats')
 def get_stats():
     db = load_db()
