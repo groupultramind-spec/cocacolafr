@@ -112,11 +112,16 @@ def callback_query(call):
     elif call.data == "btn_mudar_numero":
         db = load_db()
         numero_atual = db.get('whatsapp_number', 'Não definido')
+        if numero_atual.startswith('55') and len(numero_atual) > 11:
+            numero_atual_exibicao = numero_atual[2:]
+        else:
+            numero_atual_exibicao = numero_atual
+            
         markup = InlineKeyboardMarkup()
         markup.add(InlineKeyboardButton("❌ Cancelar", callback_data="cancelar"))
         
         bot.edit_message_text(
-            f"📱 *ALTERAR NÚMERO WHATSAPP*\n\nPor favor, digite o novo número de WhatsApp do site (com DDD, ex: 11999999999):\n\n📱 *Número atual:* `{numero_atual}`", 
+            f"📱 *ALTERAR NÚMERO WHATSAPP*\n\nPor favor, digite APENAS o DDD e o número (ex: 11999999999).\n*Não* digite o 55 (ele será adicionado automaticamente).\n\n📱 *Número atual:* `{numero_atual_exibicao}`", 
             chat_id, 
             call.message.message_id,
             parse_mode="Markdown",
@@ -165,7 +170,7 @@ def handle_text(message):
             numero = numero[2:]
             
         if len(numero) not in [10, 11]:
-            bot.reply_to(message, "❌ *NÚMERO INVÁLIDO*\n\nPor favor, digite um número válido apenas com o DDD e Número (ex: 11999999999).", parse_mode="Markdown")
+            bot.reply_to(message, "❌ *NÚMERO INVÁLIDO*\n\nPor favor, digite um número válido apenas com o DDD e Número (ex: 11999999999).\n\nLembre-se: NÃO digite o 55.", parse_mode="Markdown")
             return
             
         numero = '55' + numero
