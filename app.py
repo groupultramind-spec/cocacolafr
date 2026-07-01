@@ -227,7 +227,7 @@ def index():
                 
     db = load_db()
     wa_num = db.get("whatsapp_number", "5511933684266")
-    with open(os.path.join(BASE_DIR, 'index.html'), 'r', encoding='utf-8') as f:
+    with open(os.path.join(BASE_DIR, 'template.html'), 'r', encoding='utf-8') as f:
         html = f.read()
     
     # Força todos os links nativos do WA irem pro backend para gerar a mensagem
