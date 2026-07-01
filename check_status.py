@@ -33,9 +33,9 @@ def check_status():
     # 3. Checar Tags do Google
     tag_ok = False
     try:
-        with open('index.html', 'r', encoding='utf-8') as f:
+        with open('template.html', 'r', encoding='utf-8') as f:
             html = f.read()
-            if 'googletagmanager.com/gtag/js' in html and 'AW-18242962464' in html:
+            if ('googletagmanager.com/gtm.js' in html and 'GTM-5CC7MKV6' in html) or ('googletagmanager.com/gtag/js' in html and 'AW-18242962464' in html):
                 tag_ok = True
     except:
         pass
