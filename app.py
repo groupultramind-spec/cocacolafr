@@ -525,6 +525,12 @@ def update_number():
         db['whatsapp_number'] = data['number']
         save_db(db)
         
+    try:
+        import subprocess
+        subprocess.run(['python', os.path.join(BASE_DIR, 'generate_index.py')], check=True)
+    except Exception as e:
+        print("Error generating static index:", e)
+        
     return jsonify({"success": True})
 
 active_sessions = {}
